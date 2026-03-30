@@ -10,14 +10,14 @@ API для веб-сервиса интерактивных визуализац
 
 ## Стек технологий
 
-- **NestJS** — фреймворк для Node.js
-- **TypeScript** — язык программирования
-- **PostgreSQL** — база данных (JSONB для гибких конфигураций)
-- **TypeORM** — ORM для работы с БД
-- **JWT** — аутентификация
-- **Swagger** — документация API
-- **Docker** — контейнеризация
-- **Render** — облачный хостинг
+- **NestJS** - фреймворк для Node.js
+- **TypeScript** - язык программирования
+- **PostgreSQL** - база данных (JSONB для гибких конфигураций)
+- **TypeORM** - ORM для работы с БД
+- **JWT** - аутентификация
+- **Swagger** - документация API
+- **Docker** - контейнеризация
+- **Render** - облачный хостинг
 
 ## Установка и запуск
 
@@ -54,31 +54,31 @@ JWT_SECRET=your-super-secret-key-change-this
 ### Установка зависимостей
 
 ```bash
-$ npm install
+npm install
 ```
 
 ### Запуск сервера
 
 ```bash
 # development
-$ npm run start
+npm run start
 
 # watch mode (рекомендуется для разработки)
-$ npm run start:dev
+npm run start:dev
 
 # production mode
-$ npm run start:prod
+npm run start:prod
 ```
 
-Сервер запустится на `
+Сервер запустится на
 ```bash
-http://localhost:3000`
+http://localhost:3000
 ```
 
 ## API Документация
 
 После запуска сервера документация Swagger доступна по адресу:
-```
+```bash
 http://localhost:3000/api/docs
 ```
 
@@ -105,7 +105,7 @@ Authorization: Bearer <ваш_токен>
 ## Тестирование с Postman
 
 В папке `postman/` находится коллекция для Postman:
-- `Postman_collection.json` — коллекция запросов
+- `Postman_collection.json`
 
 **Как импортировать:**
 1. Откройте Postman
@@ -137,13 +137,13 @@ Authorization: Bearer <ваш_токен>
 
 ```bash
 # unit tests
-$ npm run test
+npm run test
 
 # e2e tests
-$ npm run test:e2e
+npm run test:e2e
 
 # test coverage
-$ npm run test:cov
+npm run test:cov
 ```
 
 ## Структура проекта
@@ -187,10 +187,10 @@ src/
 
 ```bash
 # Сборка проекта
-$ npm run build
+npm run build
 
 # Запуск в production режиме
-$ npm run start:prod
+npm run start:prod
 ```
 
 Для деплоя на облачные платформы (Render, Heroku и т.д.) используется `dist/main.js` как точка входа.
