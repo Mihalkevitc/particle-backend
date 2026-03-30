@@ -107,23 +107,23 @@ Authorization: Bearer <ваш_токен>
 В папке `postman/` находится коллекция для Postman:
 - `Postman_collection.json`
 
-**Как импортировать:**
+### Как импортировать
 1. Откройте Postman
 2. Нажмите `Import` - `File` - выберите файл коллекции
 3. Импортируйте
 
 ![alt text](postman/image-2.png)
 
-**Настройка окружения в Postman:**
-Создайте Environment с переменными:
-
-![alt text](postman/image.png)
+### Настройка окружения в Postman
+Создайте Environment с переменными
 
 | Переменная | Значение |
 |------------|----------|
 | `baseUrl` | `http://localhost:3000` |
 | `accessToken` | (заполняется автоматически после логина) |
 
+![alt text](postman/image.png)
+---
 ![alt text](postman/image-1.png)
 
 **Порядок тестирования:**
