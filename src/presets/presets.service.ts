@@ -1,23 +1,36 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Preset } from './preset.entity';
+import { CreatePresetDto } from './dto/create-preset.dto';
+import { UpdatePresetDto } from './dto/update-preset.dto';
+import { PresetResponseDto } from './dto/preset-response.dto';
 
 @Injectable()
 export class PresetsService {
   constructor(
-    // Внедряем репозиторий TypeORM для работы с таблицей presets
     @InjectRepository(Preset)
     private readonly presetRepository: Repository<Preset>,
   ) {}
 
-  // CRUD:
-  // Получить все пресеты (пока без фильтрации по пользователю)
-  async findAll(): Promise<Preset[]> {
-    return this.presetRepository.find();
+  // Преобразуем Preset в PresetResponseDto
+  private toResponseDto(preset: Preset): PresetResponseDto {
+    return {
+      id: preset.id,
+      name: preset.name,
+      config: preset.config,
+      createdAt: preset.createdAt,
+      updatedAt: preset.updatedAt,
+    };
   }
 
-  // Найти один пресет по ID. Если не найден — выбросить 404
+  // Получить все пресеты пользователя
+  async findAllByUser(userId: number): Promise<PresetResponseDto[]> {
+    const presets = await this.presetRepository.find({ where: { userId } });
+    return presets.map(p => this.toResponseDto(p));
+  }
+
+  // Найти один пресет по ID (без проверки владельца)
   async findOne(id: number): Promise<Preset> {
     const preset = await this.presetRepository.findOne({ where: { id } });
     if (!preset) {
@@ -26,28 +39,41 @@ export class PresetsService {
     return preset;
   }
 
+  // Найти пресет и проверить, что он принадлежит пользователю
+  async findOneAndCheckOwner(id: number, userId: number): Promise<PresetResponseDto> {
+    const preset = await this.findOne(id);
+    if (preset.userId !== userId) {
+      throw new ForbiddenException('You do not have access to this preset');
+    }
+    return this.toResponseDto(preset);
+  }
+
   // Создать новый пресет
-  async create(data: Partial<Preset>): Promise<Preset> {
-    // Создаём экземпляр сущности из переданных данных
-    const preset = this.presetRepository.create(data);
-    // Сохраняем в базу данных
-    return this.presetRepository.save(preset);
+  async create(createPresetDto: CreatePresetDto, userId: number): Promise<PresetResponseDto> {
+    const preset = this.presetRepository.create({
+      ...createPresetDto,
+      userId,
+    });
+    const savedPreset = await this.presetRepository.save(preset);
+    return this.toResponseDto(savedPreset);
   }
 
   // Обновить существующий пресет
-  async update(id: number, data: Partial<Preset>): Promise<Preset> {
-    // Сначала проверяем, существует ли запись
-    await this.findOne(id);
+  async update(id: number, updatePresetDto: UpdatePresetDto, userId: number): Promise<PresetResponseDto> {
+    // Сначала проверяем существование и права доступа
+    await this.findOneAndCheckOwner(id, userId);
     // Обновляем
-    await this.presetRepository.update(id, data);
+    await this.presetRepository.update(id, updatePresetDto);
     // Возвращаем обновлённую запись
-    return this.findOne(id);
+    const updated = await this.findOne(id);
+    return this.toResponseDto(updated);
   }
 
   // Удалить пресет
-  async remove(id: number): Promise<void> {
+  async remove(id: number, userId: number): Promise<void> {
+    // Сначала проверяем существование и права доступа
+    await this.findOneAndCheckOwner(id, userId);
     const result = await this.presetRepository.delete(id);
-    // Если ничего не удалено — запись не существовала
     if (result.affected === 0) {
       throw new NotFoundException(`Preset with id ${id} not found`);
     }

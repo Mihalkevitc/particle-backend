@@ -1,44 +1,67 @@
-import { Controller, Get, Post, Body, Param, Put, Delete, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Delete, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 import { PresetsService } from './presets.service';
-import { Preset } from './preset.entity';
+import { PresetResponseDto } from './dto/preset-response.dto';
+import { CreatePresetDto } from './dto/create-preset.dto';
+import { UpdatePresetDto } from './dto/update-preset.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { GetUser } from '../common/decorators/get-user.decorator';
+import { User } from '../users/user.entity';
 
+@ApiTags('presets')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('presets')
 export class PresetsController {
   constructor(private readonly presetsService: PresetsService) {}
 
-  // GET /presets — получить все пресеты
   @Get()
-  async findAll(): Promise<Preset[]> {
-    return this.presetsService.findAll();
+  @ApiOperation({ summary: 'Получить все пресеты текущего пользователя' })
+  @ApiResponse({ status: 200, description: 'Список пресетов успешно получен', type: [PresetResponseDto] })
+  async findAll(@GetUser() user: User): Promise<PresetResponseDto[]> {
+    return this.presetsService.findAllByUser(user.id);
   }
 
-  // GET /presets/:id — получить один пресет по ID
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<Preset> {
-    // Преобразуем строку в число, так как Param всегда возвращает строку
-    return this.presetsService.findOne(+id);
+  @ApiOperation({ summary: 'Получить пресет по ID' })
+  @ApiParam({ name: 'id', description: 'Идентификатор пресета', example: 1 })
+  @ApiResponse({ status: 200, description: 'Пресет найден', type: PresetResponseDto })
+  @ApiResponse({ status: 404, description: 'Пресет не найден' })
+  async findOne(@Param('id') id: string, @GetUser() user: User): Promise<PresetResponseDto> {
+    return this.presetsService.findOneAndCheckOwner(+id, user.id);
   }
 
-  // POST /presets — создать новый пресет
-  // Тело запроса должно содержать поля name, config (опционально), userId (опционально)
   @Post()
-  async create(@Body() createPresetDto: Partial<Preset>): Promise<Preset> {
-    return this.presetsService.create(createPresetDto);
+  @ApiOperation({ summary: 'Создать новый пресет' })
+  @ApiResponse({ status: 201, description: 'Пресет успешно создан', type: PresetResponseDto })
+  @ApiResponse({ status: 400, description: 'Некорректные данные запроса' })
+  @ApiResponse({ status: 401, description: 'Не авторизован' })
+  async create(@Body() createPresetDto: CreatePresetDto, @GetUser() user: User): Promise<PresetResponseDto> {
+    return this.presetsService.create(createPresetDto, user.id);
   }
 
-  // PUT /presets/:id — полностью обновить пресет
   @Put(':id')
+  @ApiOperation({ summary: 'Обновить существующий пресет' })
+  @ApiParam({ name: 'id', description: 'Идентификатор пресета', example: 1 })
+  @ApiResponse({ status: 200, description: 'Пресет обновлён', type: PresetResponseDto })
+  @ApiResponse({ status: 404, description: 'Пресет не найден' })
+  @ApiResponse({ status: 403, description: 'Нет доступа к этому пресету' })
   async update(
     @Param('id') id: string,
-    @Body() updateData: Partial<Preset>,
-  ): Promise<Preset> {
-    return this.presetsService.update(+id, updateData);
+    @Body() updatePresetDto: UpdatePresetDto,
+    @GetUser() user: User,
+  ): Promise<PresetResponseDto> {
+    return this.presetsService.update(+id, updatePresetDto, user.id);
   }
 
-  // DELETE /presets/:id — удалить пресет
   @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT) // Возвращаем 204 No Content при успехе
-  async remove(@Param('id') id: string): Promise<void> {
-    return this.presetsService.remove(+id);
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Удалить пресет' })
+  @ApiParam({ name: 'id', description: 'Идентификатор пресета', example: 1 })
+  @ApiResponse({ status: 204, description: 'Пресет успешно удалён' })
+  @ApiResponse({ status: 404, description: 'Пресет не найден' })
+  @ApiResponse({ status: 403, description: 'Нет доступа к этому пресету' })
+  async remove(@Param('id') id: string, @GetUser() user: User): Promise<void> {
+    return this.presetsService.remove(+id, user.id);
   }
 }

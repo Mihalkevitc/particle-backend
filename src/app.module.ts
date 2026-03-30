@@ -4,16 +4,15 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PresetsModule } from './presets/presets.module';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
-    // Загружаем переменные окружения из .env файла
     ConfigModule.forRoot({
-      isGlobal: true,      // Делает ConfigService доступным везде без импорта
-      envFilePath: '.env', // Путь к файлу с переменными
+      isGlobal: true,
+      envFilePath: '.env',
     }),
-    
-    // Настраиваем подключение к PostgreSQL через TypeORM
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -25,12 +24,13 @@ import { PresetsModule } from './presets/presets.module';
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: true,  // Автоматически создаёт таблицы (только для разработки)
-        logging: true,      // Выводит SQL-запросы в консоль
+        synchronize: true,
+        logging: true,
       }),
     }),
-    
     PresetsModule,
+    UsersModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
