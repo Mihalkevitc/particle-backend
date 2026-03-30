@@ -2,6 +2,8 @@
 
 ## Импорт коллекции
 
+![alt text](image-2.png)
+
 1. Открой Postman
 2. Нажми `Import` - `Upload Files`
 3. Выбери файл `Postman_collection.json`

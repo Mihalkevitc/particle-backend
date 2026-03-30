@@ -1,4 +1,3 @@
-```markdown
 # Particle API
 
 **Веб-сервис интерактивных визуализаций**
@@ -71,7 +70,10 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
-Сервер запустится на `http://localhost:3000`
+Сервер запустится на `
+```bash
+http://localhost:3000`
+```
 
 ## API Документация
 
@@ -110,10 +112,13 @@ Authorization: Bearer <ваш_токен>
 2. Нажмите `Import` - `File` - выберите файл коллекции
 3. Импортируйте
 
-![alt text](postman/image.png)
+![alt text](postman/image-2.png)
 
 **Настройка окружения в Postman:**
 Создайте Environment с переменными:
+
+![alt text](postman/image.png)
+
 | Переменная | Значение |
 |------------|----------|
 | `baseUrl` | `http://localhost:3000` |
@@ -122,11 +127,11 @@ Authorization: Bearer <ваш_токен>
 ![alt text](postman/image-1.png)
 
 **Порядок тестирования:**
-1. `Auth - Register` — создать пользователя
-2. `Auth - Login` — войти (токен сохранится автоматически)
-3. `Users - Get Current User` — получить профиль
-4. `Presets - Create Preset` — создать пресет
-5. `Presets - Get All Presets` — получить список
+1. `Auth - Register` - создать пользователя
+2. `Auth - Login` - войти (токен сохранится автоматически)
+3. `Users - Get Current User` - получить профиль
+4. `Presets - Create Preset` - создать пресет
+5. `Presets - Get All Presets` - получить список
 
 ## Тесты
 
@@ -199,4 +204,3 @@ $ npm run start:prod
 ## Лицензия
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
-```
