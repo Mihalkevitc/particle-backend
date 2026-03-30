@@ -1,50 +1,134 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+```markdown
+# Particle API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+**Веб-сервис интерактивных визуализаций**
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+API для веб-сервиса интерактивных визуализаций на основе алгоритмов моделирования динамических частиц. Проект включает в себя:
+- Регистрацию и аутентификацию пользователей (JWT)
+- Управление пресетами визуализаций (CRUD)
+- Хранение конфигураций в формате JSON
+- Документацию API через Swagger
 
-## Description
+## Стек технологий
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- **NestJS** — фреймворк для Node.js
+- **TypeScript** — язык программирования
+- **PostgreSQL** — база данных (JSONB для гибких конфигураций)
+- **TypeORM** — ORM для работы с БД
+- **JWT** — аутентификация
+- **Swagger** — документация API
+- **Docker** — контейнеризация
+- **Render** — облачный хостинг
 
-## Project setup
+## Установка и запуск
+
+### Требования
+- Node.js (v18+)
+- PostgreSQL (локально или удалённо)
+
+### Настройка окружения
+
+### Установка
+
+1. Клонируйте репозиторий и перейдите в папку проекта
+```bash
+git clone https://github.com/Mihalkevitc/particle-backend.git
+cd particle-backend
+```
+
+2. Создайте базу данных
+
+```bash
+CREATE DATABASE particle_db;
+```
+
+3. В кроне проекта создайте файл `.env` и заполните параметры:
+```bash
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=postgres
+DB_PASSWORD=your_password
+DB_DATABASE=particle_db
+JWT_SECRET=your-super-secret-key-change-this
+```
+
+### Установка зависимостей
 
 ```bash
 $ npm install
 ```
 
-## Compile and run the project
+### Запуск сервера
 
 ```bash
 # development
 $ npm run start
 
-# watch mode
+# watch mode (рекомендуется для разработки)
 $ npm run start:dev
 
 # production mode
 $ npm run start:prod
 ```
 
-## Run tests
+Сервер запустится на `http://localhost:3000`
+
+## API Документация
+
+После запуска сервера документация Swagger доступна по адресу:
+```
+http://localhost:3000/api/docs
+```
+
+### Основные эндпоинты
+
+| Метод | URL | Описание |
+|-------|-----|----------|
+| POST | `/api/v1/auth/register` | Регистрация пользователя |
+| POST | `/api/v1/auth/login` | Вход, получение JWT токена |
+| GET | `/api/v1/users/me` | Получить профиль текущего пользователя |
+| GET | `/api/v1/presets` | Получить все пресеты пользователя |
+| POST | `/api/v1/presets` | Создать новый пресет |
+| GET | `/api/v1/presets/:id` | Получить пресет по ID |
+| PUT | `/api/v1/presets/:id` | Обновить пресет |
+| DELETE | `/api/v1/presets/:id` | Удалить пресет |
+
+### Аутентификация
+
+Для доступа к защищённым эндпоинтам добавьте в заголовок:
+```
+Authorization: Bearer <ваш_токен>
+```
+
+## Тестирование с Postman
+
+В папке `postman/` находится коллекция для Postman:
+- `Postman_collection.json` — коллекция запросов
+
+**Как импортировать:**
+1. Откройте Postman
+2. Нажмите `Import` - `File` - выберите файл коллекции
+3. Импортируйте
+
+![alt text](postman/image.png)
+
+**Настройка окружения в Postman:**
+Создайте Environment с переменными:
+| Переменная | Значение |
+|------------|----------|
+| `baseUrl` | `http://localhost:3000` |
+| `accessToken` | (заполняется автоматически после логина) |
+
+![alt text](postman/image-1.png)
+
+**Порядок тестирования:**
+1. `Auth - Register` — создать пользователя
+2. `Auth - Login` — войти (токен сохранится автоматически)
+3. `Users - Get Current User` — получить профиль
+4. `Presets - Create Preset` — создать пресет
+5. `Presets - Get All Presets` — получить список
+
+## Тесты
 
 ```bash
 # unit tests
@@ -57,42 +141,62 @@ $ npm run test:e2e
 $ npm run test:cov
 ```
 
-## Deployment
+## Структура проекта
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+```
+src/
+├── main.ts                   # Точка входа, Swagger, глобальный префикс /api/v1
+├── app.module.ts             # Главный модуль
+├── common/
+│   └── decorators/
+│       └── get-user.decorator.ts   # Декоратор для получения пользователя
+├── users/                    # Модуль пользователей
+│   ├── users.module.ts
+│   ├── users.controller.ts   # GET /users/me
+│   ├── users.service.ts      # Поиск, создание, хеширование паролей
+│   ├── user.entity.ts
+│   └── dto/
+├── auth/                     # Модуль аутентификации
+│   ├── auth.module.ts
+│   ├── auth.controller.ts    # POST /auth/register, POST /auth/login
+│   ├── auth.service.ts       # Регистрация, логин, JWT
+│   ├── guards/
+│   └── strategies/
+└── presets/                  # Модуль пресетов
+    ├── presets.module.ts
+    ├── presets.controller.ts # CRUD для /presets
+    ├── presets.service.ts    # Бизнес-логика, проверка владельца
+    ├── preset.entity.ts
+    └── dto/
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## Связь между пресетами и пользователями
 
-## Resources
+- Каждый пресет привязан к пользователю через поле `userId`
+- Пользователь видит только свои пресеты (`findAllByUser`)
+- При обновлении/удалении пресета проверяется принадлежность пользователю (`findOneAndCheckOwner`)
 
-Check out a few resources that may come in handy when working with NestJS:
+## Развёртывание
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+При готовности к продакшену:
 
-## Support
+```bash
+# Сборка проекта
+$ npm run build
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+# Запуск в production режиме
+$ npm run start:prod
+```
 
-## Stay in touch
+Для деплоя на облачные платформы (Render, Heroku и т.д.) используется `dist/main.js` как точка входа.
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## Ресурсы
 
-## License
+- [NestJS Documentation](https://docs.nestjs.com)
+- [TypeORM Documentation](https://typeorm.io)
+- [Passport.js Documentation](https://www.passportjs.org)
+
+## Лицензия
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+```

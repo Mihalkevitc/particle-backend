@@ -52,7 +52,7 @@ export class PresetsService {
   async create(createPresetDto: CreatePresetDto, userId: number): Promise<PresetResponseDto> {
     const preset = this.presetRepository.create({
       ...createPresetDto,
-      userId,
+      userId, // Приявязка присета к пользователю
     });
     const savedPreset = await this.presetRepository.save(preset);
     return this.toResponseDto(savedPreset);

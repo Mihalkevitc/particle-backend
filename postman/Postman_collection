@@ -1,0 +1,198 @@
+{
+  "info": {
+    "name": "Particle API",
+    "description": "API для веб-сервиса интерактивных визуализаций",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.id) {",
+                  "    pm.test('User registered successfully', () => {",
+                  "        pm.expect(response.email).to.equal('test@example.com');",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/auth/register",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"123456\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.accessToken) {",
+                  "    pm.environment.set('accessToken', response.accessToken);",
+                  "    pm.test('Token received', () => {",
+                  "        pm.expect(response.accessToken).to.be.a('string');",
+                  "    });",
+                  "}",
+                  "if (response.user) {",
+                  "    pm.test('User data received', () => {",
+                  "        pm.expect(response.user.email).to.equal('test@example.com');",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/auth/login",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"123456\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/users/me",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Presets",
+      "item": [
+        {
+          "name": "Get All Presets",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/presets",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Get Preset By ID",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/presets/1",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Create Preset",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/presets",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Космический поток\",\n  \"config\": {\n    \"particleCount\": 5000,\n    \"colors\": [\"#1a1a2e\", \"#16213e\", \"#0f3460\"],\n    \"behavior\": \"magnetic\",\n    \"particleSize\": 2,\n    \"maxSpeed\": 2\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Preset",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/v1/presets/1",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Обновлённый пресет\",\n  \"config\": {\n    \"particleCount\": 10000,\n    \"colors\": [\"#ff6b6b\", \"#4ecdc4\"],\n    \"behavior\": \"gravity\"\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Preset",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/v1/presets/1",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
