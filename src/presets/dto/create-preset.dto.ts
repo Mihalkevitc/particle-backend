@@ -1,10 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-// DTO для создания пресета
 export class CreatePresetDto {
-  @ApiProperty({ description: 'Название пресета', example: 'Космический поток' })
+  @ApiProperty({ example: 'Космический поток', description: 'Название пресета' })
   name: string;
 
-  @ApiProperty({ description: 'JSON-конфигурация визуализации', required: false, example: { particleCount: 5000 } })
+  @ApiProperty({ example: { particleCount: 5000, colors: ['#1a1a2e'] }, description: 'Конфигурация визуализации', required: false })
   config?: Record<string, any>;
+
+  @ApiProperty({ example: false, description: 'Публичный ли пресет', required: false, default: false })
+  isPublic?: boolean;
 }

@@ -1,5 +1,5 @@
-import { Controller, Get, Post, Body, Param, Put, Delete, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Param, Put, Patch, Delete, HttpCode, HttpStatus, UseGuards, Query } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiProperty } from '@nestjs/swagger';
 import { PresetsService } from './presets.service';
 import { PresetResponseDto } from './dto/preset-response.dto';
 import { CreatePresetDto } from './dto/create-preset.dto';
@@ -8,21 +8,38 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { GetUser } from '../common/decorators/get-user.decorator';
 import { User } from '../users/user.entity';
 
+// DTO для обновления публичности
+class UpdatePublicStatusDto {
+  @ApiProperty({ example: true, description: 'Публичный ли пресет' })
+  isPublic: boolean;
+}
+
 @ApiTags('presets')
-@ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
 @Controller('presets')
 export class PresetsController {
   constructor(private readonly presetsService: PresetsService) {}
 
+  // Публичный эндпоинт: получить ленту публичных пресетов (авторизация опциональна)
+  @Get('public')
+  @ApiOperation({ summary: 'Получить публичные пресеты (лента)' })
+  @ApiResponse({ status: 200, description: 'Список публичных пресетов' })
+  async getPublicFeed(@GetUser() user?: User) {
+    return this.presetsService.findPublicPresets(user?.id);
+  }
+
+  // Защищённые эндпоинты (требуют авторизацию)
   @Get()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Получить все пресеты текущего пользователя' })
-  @ApiResponse({ status: 200, description: 'Список пресетов успешно получен', type: [PresetResponseDto] })
+  @ApiResponse({ status: 200, description: 'Список пресетов', type: [PresetResponseDto] })
   async findAll(@GetUser() user: User): Promise<PresetResponseDto[]> {
     return this.presetsService.findAllByUser(user.id);
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Получить пресет по ID' })
   @ApiParam({ name: 'id', description: 'Идентификатор пресета', example: 1 })
   @ApiResponse({ status: 200, description: 'Пресет найден', type: PresetResponseDto })
@@ -32,20 +49,20 @@ export class PresetsController {
   }
 
   @Post()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Создать новый пресет' })
-  @ApiResponse({ status: 201, description: 'Пресет успешно создан', type: PresetResponseDto })
-  @ApiResponse({ status: 400, description: 'Некорректные данные запроса' })
-  @ApiResponse({ status: 401, description: 'Не авторизован' })
+  @ApiResponse({ status: 201, description: 'Пресет создан', type: PresetResponseDto })
   async create(@Body() createPresetDto: CreatePresetDto, @GetUser() user: User): Promise<PresetResponseDto> {
     return this.presetsService.create(createPresetDto, user.id);
   }
 
   @Put(':id')
-  @ApiOperation({ summary: 'Обновить существующий пресет' })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Обновить пресет' })
   @ApiParam({ name: 'id', description: 'Идентификатор пресета', example: 1 })
   @ApiResponse({ status: 200, description: 'Пресет обновлён', type: PresetResponseDto })
-  @ApiResponse({ status: 404, description: 'Пресет не найден' })
-  @ApiResponse({ status: 403, description: 'Нет доступа к этому пресету' })
   async update(
     @Param('id') id: string,
     @Body() updatePresetDto: UpdatePresetDto,
@@ -54,13 +71,28 @@ export class PresetsController {
     return this.presetsService.update(+id, updatePresetDto, user.id);
   }
 
+  @Patch(':id/public')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Сделать пресет публичным или приватным' })
+  @ApiParam({ name: 'id', description: 'Идентификатор пресета', example: 1 })
+  @ApiBody({ type: UpdatePublicStatusDto, description: 'Тело запроса с полем isPublic' })
+  @ApiResponse({ status: 200, description: 'Статус публичности обновлён', type: PresetResponseDto })
+  async updatePublicStatus(
+    @Param('id') id: string,
+    @Body('isPublic') isPublic: boolean,
+    @GetUser() user: User,
+  ): Promise<PresetResponseDto> {
+    return this.presetsService.updatePublicStatus(+id, user.id, isPublic);
+  }
+
   @Delete(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Удалить пресет' })
   @ApiParam({ name: 'id', description: 'Идентификатор пресета', example: 1 })
-  @ApiResponse({ status: 204, description: 'Пресет успешно удалён' })
-  @ApiResponse({ status: 404, description: 'Пресет не найден' })
-  @ApiResponse({ status: 403, description: 'Нет доступа к этому пресету' })
+  @ApiResponse({ status: 204, description: 'Пресет удалён' })
   async remove(@Param('id') id: string, @GetUser() user: User): Promise<void> {
     return this.presetsService.remove(+id, user.id);
   }

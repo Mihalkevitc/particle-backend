@@ -5,20 +5,43 @@ import { Preset } from './preset.entity';
 import { CreatePresetDto } from './dto/create-preset.dto';
 import { UpdatePresetDto } from './dto/update-preset.dto';
 import { PresetResponseDto } from './dto/preset-response.dto';
+import { LikesService } from './likes/likes.service';
+import { CommentsService } from './comments/comments.service';
+import { UsersService } from '../users/users.service';
+
+// Тип для публичного пресета в ленте
+export interface PublicPresetResponse {
+  id: number;
+  name: string;
+  config: Record<string, any>;
+  author: {
+    id: number;
+    email: string;
+  };
+  likesCount: number;
+  commentsCount: number;
+  isLikedByCurrentUser: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 @Injectable()
 export class PresetsService {
   constructor(
     @InjectRepository(Preset)
     private readonly presetRepository: Repository<Preset>,
+    private readonly likesService: LikesService,
+    private readonly commentsService: CommentsService,
+    private readonly usersService: UsersService,
   ) {}
 
-  // Преобразуем Preset в PresetResponseDto
+  // Преобразование Preset в PresetResponseDto
   private toResponseDto(preset: Preset): PresetResponseDto {
     return {
       id: preset.id,
       name: preset.name,
       config: preset.config,
+      isPublic: preset.isPublic,
       createdAt: preset.createdAt,
       updatedAt: preset.updatedAt,
     };
@@ -28,6 +51,41 @@ export class PresetsService {
   async findAllByUser(userId: number): Promise<PresetResponseDto[]> {
     const presets = await this.presetRepository.find({ where: { userId } });
     return presets.map(p => this.toResponseDto(p));
+  }
+
+  // Получить публичные пресеты (лента)
+  async findPublicPresets(currentUserId?: number): Promise<PublicPresetResponse[]> {
+    const presets = await this.presetRepository.find({
+      where: { isPublic: true },
+      order: { createdAt: 'DESC' },
+    });
+
+    const result: PublicPresetResponse[] = [];
+
+    for (const preset of presets) {
+      const author = await this.usersService.findById(preset.userId);
+      const likesCount = await this.likesService.getLikesCount(preset.id);
+      const commentsCount = await this.commentsService.getCommentsCount(preset.id);
+      const isLikedByCurrentUser = currentUserId
+        ? await this.likesService.hasLiked(preset.id, currentUserId)
+        : false;
+
+      result.push({
+        id: preset.id,
+        name: preset.name,
+        config: preset.config,
+        author: {
+          id: author.id,
+          email: author.email,
+        },
+        likesCount,
+        commentsCount,
+        isLikedByCurrentUser,
+        createdAt: preset.createdAt,
+        updatedAt: preset.updatedAt,
+      });
+    }
+    return result;
   }
 
   // Найти один пресет по ID (без проверки владельца)
@@ -53,6 +111,7 @@ export class PresetsService {
     const preset = this.presetRepository.create({
       ...createPresetDto,
       userId, // Приявязка присета к пользователю
+      isPublic: createPresetDto.isPublic ?? false, // Публичность присета
     });
     const savedPreset = await this.presetRepository.save(preset);
     return this.toResponseDto(savedPreset);
@@ -65,6 +124,14 @@ export class PresetsService {
     // Обновляем
     await this.presetRepository.update(id, updatePresetDto);
     // Возвращаем обновлённую запись
+    const updated = await this.findOne(id);
+    return this.toResponseDto(updated);
+  }
+
+  // Обновить публичность пресета
+  async updatePublicStatus(id: number, userId: number, isPublic: boolean): Promise<PresetResponseDto> {
+    await this.findOneAndCheckOwner(id, userId);
+    await this.presetRepository.update(id, { isPublic });
     const updated = await this.findOne(id);
     return this.toResponseDto(updated);
   }

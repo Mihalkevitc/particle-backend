@@ -10,6 +10,9 @@ export class PresetResponseDto {
   @ApiProperty({ example: { particleCount: 5000, colors: ['#1a1a2e'] }, description: 'Конфигурация визуализации' })
   config: Record<string, any>;
 
+  @ApiProperty({ example: true })
+  isPublic: boolean;
+
   @ApiProperty({ example: '2026-04-05T12:00:00.000Z', description: 'Дата создания' })
   createdAt: Date;
 

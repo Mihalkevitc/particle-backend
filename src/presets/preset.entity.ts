@@ -21,6 +21,10 @@ export class Preset {
   @Column({ type: 'int', name: 'user_id', nullable: true })
   userId: number;
 
+  // Публичный ли пресет (виден всем в ленте)
+  @Column({ type: 'boolean', name: 'is_public', default: false })
+  isPublic: boolean;
+
   // Дата создания, заполняется автоматически
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

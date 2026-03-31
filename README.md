@@ -2,11 +2,16 @@
 
 **Веб-сервис интерактивных визуализаций**
 
-API для веб-сервиса интерактивных визуализаций на основе алгоритмов моделирования динамических частиц. Проект включает в себя:
-- Регистрацию и аутентификацию пользователей (JWT)
+API для веб-сервиса интерактивных визуализаций на основе алгоритмов моделирования динамических частиц.
+
+## Возможности
+
+- Регистрация и аутентификация пользователей (JWT)
 - Управление пресетами визуализаций (CRUD)
+- Публичные пресеты (лента)
+- Лайки и комментарии к пресетам
 - Хранение конфигураций в формате JSON
-- Документацию API через Swagger
+- Документация API через Swagger
 
 ## Стек технологий
 
@@ -85,15 +90,23 @@ http://localhost:3000/api/docs
 ### Основные эндпоинты
 
 | Метод | URL | Описание |
-|-------|-----|----------|
-| POST | `/api/v1/auth/register` | Регистрация пользователя |
-| POST | `/api/v1/auth/login` | Вход, получение JWT токена |
-| GET | `/api/v1/users/me` | Получить профиль текущего пользователя |
-| GET | `/api/v1/presets` | Получить все пресеты пользователя |
-| POST | `/api/v1/presets` | Создать новый пресет |
-| GET | `/api/v1/presets/:id` | Получить пресет по ID |
+|:------|:----|:---------|
+| POST | `/api/v1/auth/register` | Регистрация |
+| POST | `/api/v1/auth/login` | Вход, получение JWT |
+| GET | `/api/v1/users/me` | Профиль текущего пользователя |
+| GET | `/api/v1/presets/public` | Лента публичных пресетов |
+| GET | `/api/v1/presets` | Мои пресеты |
+| POST | `/api/v1/presets` | Создать пресет |
+| GET | `/api/v1/presets/:id` | Получить пресет |
 | PUT | `/api/v1/presets/:id` | Обновить пресет |
 | DELETE | `/api/v1/presets/:id` | Удалить пресет |
+| PATCH | `/api/v1/presets/:id/public` | Сделать публичным/приватным |
+| POST | `/api/v1/presets/:id/like` | Поставить лайк |
+| DELETE | `/api/v1/presets/:id/like` | Убрать лайк |
+| GET | `/api/v1/presets/:id/comments` | Получить комментарии |
+| POST | `/api/v1/presets/:id/comments` | Добавить комментарий |
+| PUT | `/api/v1/comments/:id` | Обновить комментарий |
+| DELETE | `/api/v1/comments/:id` | Удалить комментарий |
 
 ### Аутентификация
 
@@ -150,36 +163,40 @@ npm run test:cov
 
 ```
 src/
-├── main.ts                   # Точка входа, Swagger, глобальный префикс /api/v1
+├── main.ts                   # Точка входа, Swagger, префикс /api/v1
 ├── app.module.ts             # Главный модуль
 ├── common/
 │   └── decorators/
-│       └── get-user.decorator.ts   # Декоратор для получения пользователя
+│       └── get-user.decorator.ts
 ├── users/                    # Модуль пользователей
 │   ├── users.module.ts
-│   ├── users.controller.ts   # GET /users/me
-│   ├── users.service.ts      # Поиск, создание, хеширование паролей
+│   ├── users.controller.ts
+│   ├── users.service.ts
 │   ├── user.entity.ts
 │   └── dto/
 ├── auth/                     # Модуль аутентификации
 │   ├── auth.module.ts
-│   ├── auth.controller.ts    # POST /auth/register, POST /auth/login
-│   ├── auth.service.ts       # Регистрация, логин, JWT
+│   ├── auth.controller.ts
+│   ├── auth.service.ts
+│   ├── dto/
 │   ├── guards/
 │   └── strategies/
 └── presets/                  # Модуль пресетов
     ├── presets.module.ts
-    ├── presets.controller.ts # CRUD для /presets
-    ├── presets.service.ts    # Бизнес-логика, проверка владельца
+    ├── presets.controller.ts
+    ├── presets.service.ts
     ├── preset.entity.ts
-    └── dto/
+    ├── dto/
+    ├── likes/                # Вложенный модуль лайков
+    └── comments/             # Вложенный модуль комментариев
 ```
 
 ## Связь между пресетами и пользователями
 
-- Каждый пресет привязан к пользователю через поле `userId`
-- Пользователь видит только свои пресеты (`findAllByUser`)
-- При обновлении/удалении пресета проверяется принадлежность пользователю (`findOneAndCheckOwner`)
+- Каждый пресет привязан к пользователю через поле userId
+- Пользователь видит только свои пресеты
+- При обновлении/удалении пресета проверяется принадлежность пользователю
+- Лайки и комментарии также привязаны к пользователям
 
 ## Развёртывание
 
