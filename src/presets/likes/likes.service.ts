@@ -23,6 +23,11 @@ export class LikesService {
     return this.likeRepository.count({ where: { presetId } });
   }
 
+  // Получить все лайки пользователя
+  async findByUserId(userId: number): Promise<Like[]> {
+    return this.likeRepository.find({ where: { userId } });
+  }
+
   // Поставить лайк
   async like(presetId: number, userId: number): Promise<void> {
     const existing = await this.likeRepository.findOne({

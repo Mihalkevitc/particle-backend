@@ -88,6 +88,39 @@ export class PresetsService {
     return result;
   }
 
+  // Получить пресеты, которые лайкнул пользователь
+  async findLikedByUser(userId: number): Promise<PublicPresetResponse[]> {
+    // Находим все лайки пользователя
+    const likes = await this.likesService.findByUserId(userId);
+    const presetIds = likes.map(like => like.presetId);
+    
+    if (presetIds.length === 0) return [];
+    
+    // Находим пресеты по IDs
+    const presets = await this.presetRepository.findByIds(presetIds);
+    
+    // Формируем ответ (аналогично findPublicPresets)
+    const result: PublicPresetResponse[] = [];
+    for (const preset of presets) {
+      const author = await this.usersService.findById(preset.userId);
+      const likesCount = await this.likesService.getLikesCount(preset.id);
+      const commentsCount = await this.commentsService.getCommentsCount(preset.id);
+      
+      result.push({
+        id: preset.id,
+        name: preset.name,
+        config: preset.config,
+        author: { id: author.id, email: author.email },
+        likesCount,
+        commentsCount,
+        isLikedByCurrentUser: true, // Здесь всегда true
+        createdAt: preset.createdAt,
+        updatedAt: preset.updatedAt,
+      });
+    }
+    return result;
+  }
+
   // Найти один пресет по ID (без проверки владельца)
   async findOne(id: number): Promise<Preset> {
     const preset = await this.presetRepository.findOne({ where: { id } });

@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Param, Put, Patch, Delete, HttpCode, HttpStatus, UseGuards, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiProperty } from '@nestjs/swagger';
-import { PresetsService } from './presets.service';
+import { PresetsService, PublicPresetResponse } from './presets.service';
 import { PresetResponseDto } from './dto/preset-response.dto';
 import { CreatePresetDto } from './dto/create-preset.dto';
 import { UpdatePresetDto } from './dto/update-preset.dto';
@@ -35,6 +35,15 @@ export class PresetsController {
   @ApiResponse({ status: 200, description: 'Список пресетов', type: [PresetResponseDto] })
   async findAll(@GetUser() user: User): Promise<PresetResponseDto[]> {
     return this.presetsService.findAllByUser(user.id);
+  }
+
+  @Get('liked')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Получить пресеты, которые лайкнул пользователь' })
+  @ApiResponse({ status: 200, description: 'Список лайкнутых пресетов' })
+  async getLikedPresets(@GetUser() user: User): Promise<PublicPresetResponse[]> {
+    return this.presetsService.findLikedByUser(user.id);
   }
 
   @Get(':id')
