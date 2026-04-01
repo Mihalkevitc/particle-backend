@@ -8,6 +8,7 @@ import { PresetResponseDto } from './dto/preset-response.dto';
 import { LikesService } from './likes/likes.service';
 import { CommentsService } from './comments/comments.service';
 import { UsersService } from '../users/users.service';
+import { ViewsService } from './views/views.service';
 
 // Тип для публичного пресета в ленте
 export interface PublicPresetResponse {
@@ -33,6 +34,7 @@ export class PresetsService {
     private readonly likesService: LikesService,
     private readonly commentsService: CommentsService,
     private readonly usersService: UsersService,
+    private readonly viewsService: ViewsService,
   ) {}
 
   // Преобразование Preset в PresetResponseDto
@@ -177,5 +179,49 @@ export class PresetsService {
     if (result.affected === 0) {
       throw new NotFoundException(`Preset with id ${id} not found`);
     }
+  }
+
+  // В presets.service.ts добавить:
+
+  // Записать просмотр пресета
+  async recordView(id: number, userId?: number): Promise<void> {
+    await this.viewsService.recordView(id, userId);
+  }
+
+  // Получить пресет с просмотрами
+  async findOneWithViews(id: number, userId: number, currentUserId?: number): Promise<any> {
+    const preset = await this.findOne(id);
+    
+    // Проверка прав (если пресет не публичный и не владелец)
+    if (!preset.isPublic && preset.userId !== userId) {
+      throw new ForbiddenException('You do not have access to this preset');
+    }
+    
+    // Получаем статистику
+    const viewsCount = await this.viewsService.getViewsCount(preset.id);
+    const likesCount = await this.likesService.getLikesCount(preset.id);
+    const commentsCount = await this.commentsService.getCommentsCount(preset.id);
+    const isLikedByCurrentUser = currentUserId
+      ? await this.likesService.hasLiked(preset.id, currentUserId)
+      : false;
+    
+    const author = await this.usersService.findById(preset.userId);
+    
+    return {
+      id: preset.id,
+      name: preset.name,
+      config: preset.config,
+      isPublic: preset.isPublic,
+      author: {
+        id: author.id,
+        email: author.email,
+      },
+      viewsCount,
+      likesCount,
+      commentsCount,
+      isLikedByCurrentUser,
+      createdAt: preset.createdAt,
+      updatedAt: preset.updatedAt,
+    };
   }
 }

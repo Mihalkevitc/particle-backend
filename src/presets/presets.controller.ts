@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Put, Patch, Delete, HttpCode, HttpStatus, UseGuards, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Patch, Delete, HttpCode, HttpStatus, UseGuards, NotFoundException} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiBody, ApiProperty } from '@nestjs/swagger';
 import { PresetsService, PublicPresetResponse } from './presets.service';
 import { PresetResponseDto } from './dto/preset-response.dto';
@@ -27,6 +27,21 @@ export class PresetsController {
     return this.presetsService.findPublicPresets(user?.id);
   }
 
+  @Get('public/:id')
+  @ApiOperation({ summary: 'Получить публичный пресет по ID (без авторизации)' })
+  @ApiParam({ name: 'id', description: 'Идентификатор пресета', example: 1 })
+  @ApiResponse({ status: 200, description: 'Публичный пресет найден' })
+  @ApiResponse({ status: 404, description: 'Пресет не найден или не публичный' })
+  async getPublicPreset(@Param('id') id: string): Promise<any> {
+    const preset = await this.presetsService.findOne(+id);
+    if (!preset.isPublic) {
+      throw new NotFoundException('Preset not found or not public');
+    }
+    // Записываем просмотр (userId = null для неавторизованных)
+    await this.presetsService.recordView(+id);
+    return this.presetsService.findOneWithViews(+id, preset.userId);
+  }
+
   // Защищённые эндпоинты (требуют авторизацию)
   @Get()
   @UseGuards(JwtAuthGuard)
@@ -46,15 +61,28 @@ export class PresetsController {
     return this.presetsService.findLikedByUser(user.id);
   }
 
+  // @Get(':id')
+  // @UseGuards(JwtAuthGuard)
+  // @ApiBearerAuth()
+  // @ApiOperation({ summary: 'Получить пресет по ID' })
+  // @ApiParam({ name: 'id', description: 'Идентификатор пресета', example: 1 })
+  // @ApiResponse({ status: 200, description: 'Пресет найден', type: PresetResponseDto })
+  // @ApiResponse({ status: 404, description: 'Пресет не найден' })
+  // async findOne(@Param('id') id: string, @GetUser() user: User): Promise<PresetResponseDto> {
+  //   return this.presetsService.findOneAndCheckOwner(+id, user.id);
+  // }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Получить пресет по ID' })
+  @ApiOperation({ summary: 'Получить пресет по ID (с просмотрами, лайками, комментариями)' })
   @ApiParam({ name: 'id', description: 'Идентификатор пресета', example: 1 })
-  @ApiResponse({ status: 200, description: 'Пресет найден', type: PresetResponseDto })
-  @ApiResponse({ status: 404, description: 'Пресет не найден' })
-  async findOne(@Param('id') id: string, @GetUser() user: User): Promise<PresetResponseDto> {
-    return this.presetsService.findOneAndCheckOwner(+id, user.id);
+  @ApiResponse({ status: 200, description: 'Пресет найден' })
+  async findOne(@Param('id') id: string, @GetUser() user: User): Promise<any> {
+    // Записываем просмотр
+    await this.presetsService.recordView(+id, user.id);
+    // Возвращаем пресет со статистикой
+    return this.presetsService.findOneWithViews(+id, user.id, user.id);
   }
 
   @Post()
