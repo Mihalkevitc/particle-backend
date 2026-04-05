@@ -5,26 +5,11 @@ import { Preset } from './preset.entity';
 import { CreatePresetDto } from './dto/create-preset.dto';
 import { UpdatePresetDto } from './dto/update-preset.dto';
 import { PresetResponseDto } from './dto/preset-response.dto';
+import { PublicPresetResponseDto } from './dto/public-preset-response.dto';
 import { LikesService } from './likes/likes.service';
 import { CommentsService } from './comments/comments.service';
 import { UsersService } from '../users/users.service';
 import { ViewsService } from './views/views.service';
-
-// Тип для публичного пресета в ленте
-export interface PublicPresetResponse {
-  id: number;
-  name: string;
-  config: Record<string, any>;
-  author: {
-    id: number;
-    email: string;
-  };
-  likesCount: number;
-  commentsCount: number;
-  isLikedByCurrentUser: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
 
 @Injectable()
 export class PresetsService {
@@ -56,18 +41,19 @@ export class PresetsService {
   }
 
   // Получить публичные пресеты (лента)
-  async findPublicPresets(currentUserId?: number): Promise<PublicPresetResponse[]> {
+  async findPublicPresets(currentUserId?: number): Promise<PublicPresetResponseDto[]> {
     const presets = await this.presetRepository.find({
       where: { isPublic: true },
       order: { createdAt: 'DESC' },
     });
 
-    const result: PublicPresetResponse[] = [];
+    const result: PublicPresetResponseDto[] = [];
 
     for (const preset of presets) {
       const author = await this.usersService.findById(preset.userId);
       const likesCount = await this.likesService.getLikesCount(preset.id);
       const commentsCount = await this.commentsService.getCommentsCount(preset.id);
+      const viewsCount = await this.viewsService.getViewsCount(preset.id);
       const isLikedByCurrentUser = currentUserId
         ? await this.likesService.hasLiked(preset.id, currentUserId)
         : false;
@@ -82,6 +68,7 @@ export class PresetsService {
         },
         likesCount,
         commentsCount,
+        viewsCount,
         isLikedByCurrentUser,
         createdAt: preset.createdAt,
         updatedAt: preset.updatedAt,
@@ -91,7 +78,7 @@ export class PresetsService {
   }
 
   // Получить пресеты, которые лайкнул пользователь
-  async findLikedByUser(userId: number): Promise<PublicPresetResponse[]> {
+  async findLikedByUser(userId: number): Promise<PublicPresetResponseDto[]> {
     // Находим все лайки пользователя
     const likes = await this.likesService.findByUserId(userId);
     const presetIds = likes.map(like => like.presetId);
@@ -101,12 +88,13 @@ export class PresetsService {
     // Находим пресеты по IDs
     const presets = await this.presetRepository.findByIds(presetIds);
     
-    // Формируем ответ (аналогично findPublicPresets)
-    const result: PublicPresetResponse[] = [];
+    // Формируем ответ
+    const result: PublicPresetResponseDto[] = [];
     for (const preset of presets) {
       const author = await this.usersService.findById(preset.userId);
       const likesCount = await this.likesService.getLikesCount(preset.id);
       const commentsCount = await this.commentsService.getCommentsCount(preset.id);
+      const viewsCount = await this.viewsService.getViewsCount(preset.id);
       
       result.push({
         id: preset.id,
@@ -115,7 +103,8 @@ export class PresetsService {
         author: { id: author.id, email: author.email },
         likesCount,
         commentsCount,
-        isLikedByCurrentUser: true, // Здесь всегда true
+        viewsCount,
+        isLikedByCurrentUser: true, // Здесь всегда true, так как это пресеты, которые пользователь лайкнул
         createdAt: preset.createdAt,
         updatedAt: preset.updatedAt,
       });
@@ -145,8 +134,8 @@ export class PresetsService {
   async create(createPresetDto: CreatePresetDto, userId: number): Promise<PresetResponseDto> {
     const preset = this.presetRepository.create({
       ...createPresetDto,
-      userId, // Приявязка присета к пользователю
-      isPublic: createPresetDto.isPublic ?? false, // Публичность присета
+      userId,
+      isPublic: createPresetDto.isPublic ?? false,
     });
     const savedPreset = await this.presetRepository.save(preset);
     return this.toResponseDto(savedPreset);
@@ -154,11 +143,8 @@ export class PresetsService {
 
   // Обновить существующий пресет
   async update(id: number, updatePresetDto: UpdatePresetDto, userId: number): Promise<PresetResponseDto> {
-    // Сначала проверяем существование и права доступа
     await this.findOneAndCheckOwner(id, userId);
-    // Обновляем
     await this.presetRepository.update(id, updatePresetDto);
-    // Возвращаем обновлённую запись
     const updated = await this.findOne(id);
     return this.toResponseDto(updated);
   }
@@ -173,7 +159,6 @@ export class PresetsService {
 
   // Удалить пресет
   async remove(id: number, userId: number): Promise<void> {
-    // Сначала проверяем существование и права доступа
     await this.findOneAndCheckOwner(id, userId);
     const result = await this.presetRepository.delete(id);
     if (result.affected === 0) {
@@ -181,14 +166,12 @@ export class PresetsService {
     }
   }
 
-  // В presets.service.ts добавить:
-
-  // Записать просмотр пресета
-  async recordView(id: number, userId?: number): Promise<void> {
-    await this.viewsService.recordView(id, userId);
+  // Записать просмотр пресета (с поддержкой IP для неавторизованных)
+  async recordView(id: number, userId?: number, ipAddress?: string): Promise<void> {
+    await this.viewsService.recordView(id, userId, ipAddress);
   }
 
-  // Получить пресет с просмотрами
+  // Получить пресет с просмотрами (для страницы пресета)
   async findOneWithViews(id: number, userId: number, currentUserId?: number): Promise<any> {
     const preset = await this.findOne(id);
     
