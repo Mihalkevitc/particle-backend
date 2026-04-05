@@ -16,6 +16,10 @@
     {
       "key": "presetId",
       "value": ""
+    },
+    {
+      "key": "commentId",
+      "value": ""
     }
   ],
   "item": [
@@ -105,6 +109,14 @@
           "request": {
             "method": "GET",
             "url": "{{baseUrl}}/api/v1/presets/public"
+          }
+        },
+        {
+          "name": "Get Liked Presets",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/presets/liked",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }]
           }
         },
         {

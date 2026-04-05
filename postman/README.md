@@ -47,7 +47,7 @@
 | 3 | `Users - Get Current User` | Получение профиля |
 | 4 | `Presets - Create Preset` | Создание пресета, ID сохраняется в `presetId` |
 | 5 | `Presets - Get My Presets` | Получение списка пресетов |
-| 6 | `Presets - Get Preset By ID` | Получение пресета по ID |
+| 6 | `Presets - Get Preset By ID` | Получение пресета по ID - (записывается просмотр) |
 | 7 | `Presets - Update Preset` | Обновление пресета |
 | 8 | `Presets - Make Preset Public` | Публикация пресета |
 | 9 | `Presets - Get Public Feed` | Просмотр ленты публичных пресетов |
