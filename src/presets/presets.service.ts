@@ -182,6 +182,7 @@ export class PresetsService {
 
   // Получить пресет с просмотрами (для страницы пресета)
   async findOneWithViews(id: number, userId: number, currentUserId?: number): Promise<any> {
+    // Сначала проверяем существование пресета
     const preset = await this.findOne(id);
     
     // Проверка прав (если пресет не публичный и не владелец)
@@ -189,7 +190,7 @@ export class PresetsService {
       throw new ForbiddenException('You do not have access to this preset');
     }
     
-    // Получаем статистику
+    // Получаем статистику (без записи просмотра — запись уже сделана в контроллере)
     const viewsCount = await this.viewsService.getViewsCount(preset.id);
     const likesCount = await this.likesService.getLikesCount(preset.id);
     const commentsCount = await this.commentsService.getCommentsCount(preset.id);

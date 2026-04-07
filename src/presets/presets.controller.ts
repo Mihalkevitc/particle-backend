@@ -71,11 +71,18 @@ export class PresetsController {
   @ApiOperation({ summary: 'Получить пресет по ID (с просмотрами, лайками, комментариями)' })
   @ApiParam({ name: 'id', description: 'Идентификатор пресета', example: 1 })
   @ApiResponse({ status: 200, description: 'Пресет найден' })
+  @ApiResponse({ status: 404, description: 'Пресет не найден' })
   async findOne(@Param('id') id: string, @GetUser() user: User, @Req() request: Request): Promise<any> {
-    // Получаем IP-адрес клиента (на всякий случай, хотя у авторизованных есть userId)
+    // Сначала проверяем существование пресета
+    const preset = await this.presetsService.findOne(+id).catch(() => null);
+    if (!preset) {
+      throw new NotFoundException(`Preset with id ${id} not found`);
+    }
+    
+    // Пресет существует — записываем просмотр
     const ipAddress = request.ip || request.connection?.remoteAddress || 'unknown';
-    // Записываем просмотр
     await this.presetsService.recordView(+id, user.id, ipAddress);
+    
     // Возвращаем пресет со статистикой
     return this.presetsService.findOneWithViews(+id, user.id, user.id);
   }
