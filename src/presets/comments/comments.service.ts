@@ -16,6 +16,14 @@ export class UpdateCommentDto {
   text: string;
 }
 
+class CommentAuthorDto {
+  @ApiProperty({ example: 1, description: 'ID автора (null если пользователь удалён)', nullable: true })
+  id: number | null;
+
+  @ApiProperty({ example: 'user@example.com', description: 'Email автора (null если пользователь удалён)', nullable: true })
+  email: string | null;
+}
+
 // DTO для ответа с комментарием
 export class CommentResponseDto {
   @ApiProperty({ example: 1 })
@@ -24,14 +32,8 @@ export class CommentResponseDto {
   @ApiProperty({ example: 'Красивая визуализация!' })
   text: string;
 
-  @ApiProperty({
-    example: { id: 1, email: 'user@example.com' },
-    description: 'Автор комментария',
-  })
-  author: {
-    id: number;
-    email: string;
-  };
+  @ApiProperty({ type: CommentAuthorDto, description: 'Автор комментария (null если пользователь удалён)' })
+  author: CommentAuthorDto;
 
   @ApiProperty({ example: '2026-04-05T12:00:00.000Z' })
   createdAt: Date;
@@ -76,8 +78,12 @@ export class CommentsService {
     if (!comment) {
       throw new NotFoundException(`Comment with id ${id} not found`);
     }
-    if (comment.userId !== userId) {
+    // Если userId в комментарии стал NULL (пользователь удалён), никто не может его редактировать
+    if (comment.userId !== null && comment.userId !== userId) {
       throw new ForbiddenException('You do not have access to this comment');
+    }
+    if (comment.userId === null) {
+      throw new ForbiddenException('Cannot edit comment from deleted user');
     }
     return comment;
   }

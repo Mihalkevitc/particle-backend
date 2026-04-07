@@ -29,14 +29,17 @@ export class CommentsController {
     const result: CommentResponseDto[] = [];
 
     for (const comment of comments) {
-      const author = await this.usersService.findById(comment.userId);
+      let author: { id: number | null; email: string | null };
+      if (comment.userId !== null) {
+        const user = await this.usersService.findById(comment.userId);
+        author = { id: user.id, email: user.email };
+      } else {
+        author = { id: null, email: null };
+      }
       result.push({
         id: comment.id,
         text: comment.text,
-        author: {
-          id: author.id,
-          email: author.email,
-        },
+        author,
         createdAt: comment.createdAt,
         updatedAt: comment.updatedAt,
       });
@@ -102,14 +105,17 @@ export class CommentByIdController {
     @GetUser() user: User,
   ): Promise<CommentResponseDto> {
     const comment = await this.commentsService.update(+id, user.id, updateCommentDto.text);
-    const author = await this.usersService.findById(comment.userId);
+    let author: { id: number | null; email: string | null };
+    if (comment.userId !== null) {
+      const authorUser = await this.usersService.findById(comment.userId);
+      author = { id: authorUser.id, email: authorUser.email };
+    } else {
+      author = { id: null, email: null };
+    }
     return {
       id: comment.id,
       text: comment.text,
-      author: {
-        id: author.id,
-        email: author.email,
-      },
+      author,
       createdAt: comment.createdAt,
       updatedAt: comment.updatedAt,
     };

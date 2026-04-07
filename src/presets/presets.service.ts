@@ -50,7 +50,13 @@ export class PresetsService {
     const result: PublicPresetResponseDto[] = [];
 
     for (const preset of presets) {
-      const author = await this.usersService.findById(preset.userId);
+      let author: { id: number | null; email: string | null };
+      if (preset.userId !== null) {
+        const user = await this.usersService.findById(preset.userId);
+        author = { id: user.id, email: user.email };
+      } else {
+        author = { id: null, email: null };
+      }
       const likesCount = await this.likesService.getLikesCount(preset.id);
       const commentsCount = await this.commentsService.getCommentsCount(preset.id);
       const viewsCount = await this.viewsService.getViewsCount(preset.id);
@@ -62,10 +68,7 @@ export class PresetsService {
         id: preset.id,
         name: preset.name,
         config: preset.config,
-        author: {
-          id: author.id,
-          email: author.email,
-        },
+        author,
         likesCount,
         commentsCount,
         viewsCount,
@@ -91,7 +94,13 @@ export class PresetsService {
     // Формируем ответ
     const result: PublicPresetResponseDto[] = [];
     for (const preset of presets) {
-      const author = await this.usersService.findById(preset.userId);
+      let author: { id: number | null; email: string | null };
+      if (preset.userId !== null) {
+        const user = await this.usersService.findById(preset.userId);
+        author = { id: user.id, email: user.email };
+      } else {
+        author = { id: null, email: null };
+      }
       const likesCount = await this.likesService.getLikesCount(preset.id);
       const commentsCount = await this.commentsService.getCommentsCount(preset.id);
       const viewsCount = await this.viewsService.getViewsCount(preset.id);
@@ -100,11 +109,11 @@ export class PresetsService {
         id: preset.id,
         name: preset.name,
         config: preset.config,
-        author: { id: author.id, email: author.email },
+        author,
         likesCount,
         commentsCount,
         viewsCount,
-        isLikedByCurrentUser: true, // Здесь всегда true, так как это пресеты, которые пользователь лайкнул
+        isLikedByCurrentUser: true,
         createdAt: preset.createdAt,
         updatedAt: preset.updatedAt,
       });
@@ -188,17 +197,20 @@ export class PresetsService {
       ? await this.likesService.hasLiked(preset.id, currentUserId)
       : false;
     
-    const author = await this.usersService.findById(preset.userId);
+    let author: { id: number | null; email: string | null };
+    if (preset.userId !== null) {
+      const user = await this.usersService.findById(preset.userId);
+      author = { id: user.id, email: user.email };
+    } else {
+      author = { id: null, email: null };
+    }
     
     return {
       id: preset.id,
       name: preset.name,
       config: preset.config,
       isPublic: preset.isPublic,
-      author: {
-        id: author.id,
-        email: author.email,
-      },
+      author,
       viewsCount,
       likesCount,
       commentsCount,

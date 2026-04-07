@@ -1,11 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 class AuthorDto {
-  @ApiProperty({ example: 1 })
-  id: number;
+  @ApiProperty({ example: 1, description: 'ID автора (null если пользователь удалён)', nullable: true })
+  id: number | null;
 
-  @ApiProperty({ example: 'user@example.com' })
-  email: string;
+  @ApiProperty({ example: 'user@example.com', description: 'Email автора (null если пользователь удалён)', nullable: true })
+  email: string | null;
 }
 
 export class PublicPresetResponseDto {
